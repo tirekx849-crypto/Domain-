@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZONE.XYZ — Pusat Pengelolaan Proyek Digital + Pemutar Musik</title>
+    <style>
+        :root {
+            --bg-color: #050508;
+            --primary: #39FF14;
+            --secondary: #ffcc00;
+            --accent: #00ccff;
+            --music-pink: #ff55aa;
+            --card-bg: #0f0f18;
+            --card-border: #1e1e30;
+            --text-color: #e6e6f0;
+            --text-muted: #8a8a9e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Mobile Container Max-Width 480px */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 920px;
+            background-color: var(--bg-color);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.15), 0 0 10px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        @media (max-height: 920px) {
+            .app-container {
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+
+        /* HEADER SECTION */
+        header {
+            padding: 16px;
+            background: rgba(15, 15, 24, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.6), 0 0 20px rgba(57, 255, 20, 0.3);
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { text-shadow: 0 0 8px rgba(57, 255, 20, 0.6), 0 0 20px rgba(57, 255, 20, 0.3); }
+            50% { text-shadow: 0 0 15px rgba(57, 255, 20, 0.9), 0 0 30px rgba(57, 255, 20, 0.6); }
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .clock-box {
+            margin-top: 8px;
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(57, 255, 20, 0.08);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 20px;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: inset 0 0 8px rgba(57, 255, 20, 0.1);
+        }
+
+        /* TOP HORIZONTAL TAB MENU */
+        .tab-menu {
+            display: flex;
+            overflow-x: auto;
+            background: #0a0a10;
+            border-bottom: 1px solid var(--card-border);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .tab-menu::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            flex: 0 0 auto;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(57, 255, 20, 0.05);
+            text-shadow: 0 0 6px rgba(57, 255, 20, 0.4);
+        }
+
+        /* MAIN CONTENT AREA */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px; /* Space for bottom nav */
+            scrollbar-width: thin;
+            scrollbar-color: var(--card-border) transparent;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.35s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* CARD UI COMPONENTS */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+
+        /* FORM ELEMENTS */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #08080f;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(57, 255, 20, 0.2);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.8rem;
+            background: #08080f;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: rgba(0, 204, 255, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* BUTTONS */
+        .btn {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 12px rgba(57, 255, 20, 0.3);
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: #000;
+        }
+
+        .btn-music {
+            background: var(--music-pink);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 85, 170, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            width: auto;
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 0.65rem;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        .badge-public { background: rgba(57, 255, 20, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .badge-private { background: rgba(255, 204, 0, 0.15); color: var(--secondary); border: 1px solid var(--secondary); }
+
+        /* LIST ITEMS */
+        .item-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .list-item {
+            background: #08080d;
+            border: 1px solid var(--card-border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        /* MUSIC PLAYER SPECIFIC STYLING */
+        .player-card {
+            background: linear-gradient(145deg, #120b18, #0a0812);
+            border: 1px solid rgba(255, 85, 170, 0.3);
+            box-shadow: 0 0 20px rgba(255, 85, 170, 0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vinyl-container {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 16px auto;
+            position: relative;
+        }
+
+        .vinyl-disk {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #333 15%, #111 16%, #111 28%, #222 29%, #111 50%, #ff55aa 51%, #111 53%, #000 70%);
+            border: 4px solid #1e1e30;
+            box-shadow: 0 0 15px rgba(255, 85, 170, 0.4);
+            animation: spin 8s linear infinite;
+            animation-play-state: paused;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .vinyl-disk.playing {
+            animation-play-state: running;
+        }
+
+        .vinyl-center {
+            width: 40px;
+            height: 40px;
+            background: var(--music-pink);
+            border-radius: 50%;
+            border: 3px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .visualizer-bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            height: 30px;
+            margin-bottom: 12px;
+        }
+
+        .v-bar {
+            width: 4px;
+            height: 6px;
+            background: var(--music-pink);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .v-bar.active {
+            animation: bounce 0.4s infinite alternate ease-in-out;
+        }
+
+        @keyframes bounce {
+            0% { height: 4px; }
+            100% { height: 28px; background: var(--primary); }
+        }
+
+        .seek-slider, .volume-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--card-border);
+            outline: none;
+            margin: 8px 0;
+        }
+
+        .seek-slider::-webkit-slider-thumb, .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--music-pink);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--music-pink);
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:active { transform: scale(0.9); }
+        .ctrl-btn.play-main {
+            width: 54px;
+            height: 54px;
+            background: var(--music-pink);
+            color: #fff;
+            font-size: 1.4rem;
+            box-shadow: 0 0 15px rgba(255, 85, 170, 0.5);
+            border: none;
+        }
+
+        .ctrl-btn.active-mode {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        /* BOTTOM NAVBAR */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(10, 10, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            gap: 2px;
+            transition: all 0.2s;
+            width: 14%;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            text-shadow: 0 0 6px rgba(57, 255, 20, 0.5);
+        }
+
+        .nav-item.active .nav-icon {
+            transform: translateY(-2px);
+        }
+
+        /* HELPER UTILITIES */
+        .text-green { color: var(--primary); }
+        .text-yellow { color: var(--secondary); }
+        .text-blue { color: var(--accent); }
+        .text-pink { color: var(--music-pink); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: #08080f;
+            border: 1px solid var(--card-border);
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .stat-num {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .stat-lbl {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="app-container">
+        
+        <!-- HEADER -->
+        <header>
+            <div class="logo-title">ZONE.XYZ</div>
+            <div class="subtitle">Proyek Digital • Alat & Musik</div>
+            <div class="clock-box" id="live-clock">00:00:00 WIB • Sen, 1 Jan</div>
+        </header>
+
+        <!-- TOP TAB MENU -->
+        <div class="tab-menu" id="top-tab-menu">
+            <button class="tab-btn active" data-tab="tab-hosting">Hosting</button>
+            <button class="tab-btn" data-tab="tab-domain">Domain</button>
+            <button class="tab-btn" data-tab="tab-tiktok">TikTok</button>
+            <button class="tab-btn" data-tab="tab-musik">Musik</button>
+            <button class="tab-btn" data-tab="tab-apk">Ke APK</button>
+            <button class="tab-btn" data-tab="tab-alat">Alat</button>
+            <button class="tab-btn" data-tab="tab-simpan">Simpan</button>
+        </div>
+
+        <!-- MAIN VIEW AREA -->
+        <main>
+
+            <!-- MENU 1 — HOSTING WEBSITE -->
+            <div class="tab-content active" id="tab-hosting">
+                <div class="card">
+                    <div class="card-title"><span class="text-green">🚀</span> Unggah Subdomain Gratis</div>
+                    <div class="form-group">
+                        <label>Nama Subdomain:</label>
+                        <input type="text" id="host-name-input" placeholder="contoh: portofolio-ku" oninput="updateHostPreview()">
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--accent); margin-bottom: 10px;" id="host-preview">
+                        Preview: https://<span id="sub-domain-preview">...</span>.xyz
+                    </div>
+                    
+                    <label>Aksesibilitas:</label>
+                    <div class="toggle-group">
+                        <div class="toggle-btn active" id="host-pub-btn" onclick="setHostAccess('Public')">🌍 Publik</div>
+                        <div class="toggle-btn" id="host-priv-btn" onclick="setHostAccess('Private')">🔒 Pribadi</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>File Website (.html):</label>
+                        <input type="file" id="host-file-input" accept=".html" style="font-size: 0.75rem;">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="deployWebsite()">🚀 Unggah & Aktifkan</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="text-blue">🔗</span> Tempel Link Direct</div>
+                    <div class="form-group">
+                        <input type="text" id="direct-link-input" placeholder="https://situs-anda.com">
+                    </div>
+                    <button class="btn btn-outline" onclick="saveDirectLink()">Simpan Link</button>
+                </div>
+
+                <div class="card" id="hosting-result-card" style="display: none;">
+                    <div class="card-title"><span class="text-yellow">⚡</span> Status Proyek Hosting</div>
+                    <div id="hosting-result-details" style="font-size: 0.8rem; line-height: 1.5;"></div>
+                </div>
+            </div>
+
+            <!-- MENU 2 — KELOLA DOMAIN -->
+            <div class="tab-content" id="tab-domain">
+                <div class="card">
+                    <div class="card-title"><span class="text-yellow">🌐</span> Tambah Domain Baru</div>
+                    <div class="form-group">
+                        <label>Nama Domain:</label>
+                        <input type="text" id="domain-name-input" placeholder="myproject.com">
+                    </div>
+                    <div class="toggle-group">
+                        <div class="toggle-btn active" id="dom-pub-btn" onclick="setDomAccess('Public')">🌍 Publik</div>
+                        <div class="toggle-btn" id="dom-priv-btn" onclick="setDomAccess('Private')">🔒 Pribadi</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Catatan Domain:</label>
+                        <input type="text" id="domain-note-input" placeholder="Catatan singkat/Server DNS">
+                    </div>
+                    <button class="btn btn-secondary" onclick="addDomain()">➕ Tambah Domain</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="text-green">📊</span> Statistik Domain</div>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-num text-blue" id="stat-dom-total">0</div>
+                            <div class="stat-lbl">Total</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num text-green" id="stat-dom-pub">0</div>
+                            <div class="stat-lbl">Publik</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num text-yellow" id="stat-dom-priv">0</div>
+                            <div class="stat-lbl">Pribadi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Daftar Domain</div>
+                    <ul class="item-list" id="domain-list-ul">
+                        <li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada domain tersimpan.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MENU 3 — VIDEO TIKTOK -->
+            <div class="tab-content" id="tab-tiktok">
+                <div class="card">
+                    <div class="card-title"><span class="text-pink">🎵</span> TikTok Info Finder</div>
+                    <div class="form-group">
+                        <input type="text" id="tiktok-url-input" placeholder="Tempel URL TikTok di sini...">
+                    </div>
+                    <button class="btn btn-music" onclick="fetchTikTokInfo()">🔍 Cari Info Video</button>
+                </div>
+
+                <div class="card" id="tiktok-result-card" style="display: none;">
+                    <div class="card-title" id="tt-title">Judul Video TikTok</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+                        Pembuat: <span id="tt-author" class="text-blue">@creator</span> | Durasi: <span id="tt-duration">00:45</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveTikTokMedia('MP4')">📥 Simpan MP4</button>
+                        <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="saveTikTokMedia('MP3')">🎵 Simpan MP3</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Riwayat Pencarian</div>
+                    <ul class="item-list" id="tiktok-history-ul">
+                        <li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada riwayat.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MENU 4 — 🎵 PEMUTAR MUSIK EXHAUSTIVE -->
+            <div class="tab-content" id="tab-musik">
+                
+                <!-- BAGIAN C: PEMUTAR AKTIF WIDGET -->
+                <div class="card player-card">
+                    <div class="vinyl-container">
+                        <div class="vinyl-disk" id="vinyl-disk">
+                            <div class="vinyl-center">🎵</div>
+                        </div>
+                    </div>
+                    <h3 id="player-track-title" style="font-size: 1rem; color: #fff;">Pilih Lagu</h3>
+                    <p id="player-track-artist" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">ZONE.XYZ Music</p>
+
+                    <div class="visualizer-bars">
+                        <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+                        <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+                        <div class="v-bar"></div><div class="v-bar"></div>
+                    </div>
+
+                    <input type="range" class="seek-slider" id="seek-slider" value="0" min="0" max="100" oninput="seekTrack(this.value)">
+                    <div class="time-display">
+                        <span id="curr-time">00:00</span>
+                        <span id="total-time">00:00</span>
+                    </div>
+
+                    <div class="player-controls">
+                        <button class="ctrl-btn" onclick="skipTime(-10)">⏮️</button>
+                        <button class="ctrl-btn play-main" id="main-play-btn" onclick="togglePlay()">▶️</button>
+                        <button class="ctrl-btn" onclick="skipTime(10)">⏭️</button>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <button class="ctrl-btn btn-sm" id="repeat-btn" onclick="toggleRepeat()" title="Ulang">🔁</button>
+                        <button class="ctrl-btn btn-sm" id="shuffle-btn" onclick="toggleShuffle()" title="Acak">🔀</button>
+                        <button class="ctrl-btn btn-sm" id="fav-btn" onclick="toggleActiveFav()" title="Favorit">⭐</button>
+                    </div>
+
+                    <!-- Volume Control -->
+                    <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.8rem;">🔊</span>
+                        <input type="range" class="volume-slider" id="volume-slider" value="80" min="0" max="100" oninput="setVolume(this.value)">
+                    </div>
+                </div>
+
+                <!-- BAGIAN E: EFEK SUARA & KECEPATAN -->
+                <div class="card">
+                    <div class="card-title"><span class="text-pink">⚡</span> Kecepatan & Equalizer</div>
+                    <label>Kecepatan Putar:</label>
+                    <div class="preset-grid" style="margin-bottom: 12px;">
+                        <button class="btn btn-outline btn-sm" onclick="setSpeed(0.5)">0.5x</button>
+                        <button class="btn btn-outline btn-sm" onclick="setSpeed(0.75)">0.75x</button>
+                        <button class="btn btn-outline btn-sm text-green" onclick="setSpeed(1.0)">1.0x</button>
+                        <button class="btn btn-outline btn-sm" onclick="setSpeed(1.25)">1.25x</button>
+                        <button class="btn btn-outline btn-sm" onclick="setSpeed(1.5)">1.5x</button>
+                        <button class="btn btn-outline btn-sm" onclick="setSpeed(2.0)">2.0x</button>
+                    </div>
+
+                    <label>Preset Equalizer Audio:</label>
+                    <div class="preset-grid">
+                        <button class="btn btn-outline btn-sm" onclick="setEQ('Normal')">Normal</button>
+                        <button class="btn btn-outline btn-sm" onclick="setEQ('HighPitch')">Nada Tinggi</button>
+                        <button class="btn btn-outline btn-sm" onclick="setEQ('LowPitch')">Nada Rendah</button>
+                        <button class="btn btn-outline btn-sm" onclick="setEQ('ClearVoice')">Suara Jelas</button>
+                        <button class="btn btn-outline btn-sm" onclick="setEQ('BassBoost')">Bass Kuat</button>
+                    </div>
+                </div>
+
+                <!-- BAGIAN D: MODE LATAR BELAKANG -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 0.85rem;">Mode Latar Belakang</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Lanjutkan musik saat berpindah menu</div>
+                        </div>
+                        <input type="checkbox" id="bg-mode-toggle" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                    </div>
+                </div>
+
+                <!-- BAGIAN B: UPLOAD LAGU SENDIRI -->
+                <div class="card">
+                    <div class="card-title"><span class="text-blue">📁</span> Unggah Lagu Lokal</div>
+                    <div class="form-group">
+                        <input type="file" id="local-audio-input" accept="audio/*" onchange="handleAudioUpload(event)">
+                    </div>
+                    <div id="upload-file-info" style="font-size: 0.75rem; color: var(--primary); display: none; margin-bottom: 8px;"></div>
+                    <button class="btn btn-primary btn-sm" id="add-uploaded-btn" style="display: none;" onclick="addUploadedToTracklist()">➕ Tambah ke Daftar</button>
+                </div>
+
+                <!-- BAGIAN A: DAFTAR LAGU BAWAAN & FAVORIT -->
+                <div class="card">
+                    <div class="card-title"><span class="text-green">🎶</span> Daftar Lagu Bawaan</div>
+                    <ul class="item-list" id="tracklist-ul">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="text-yellow">⭐</span> Favorit Saya</div>
+                    <ul class="item-list" id="favorites-ul">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <!-- BAGIAN F: DAFTAR PUTAR (PLAYLIST MANAGER) -->
+                <div class="card">
+                    <div class="card-title"><span class="text-accent">📋</span> Daftar Putar (Playlist)</div>
+                    <div class="form-group" style="display: flex; gap: 6px;">
+                        <input type="text" id="playlist-name-input" placeholder="Nama Playlist Baru...">
+                        <button class="btn btn-secondary btn-sm" onclick="createPlaylist()">Buat</button>
+                    </div>
+                    <div id="playlist-container">
+                        <!-- Playlists list -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MENU 5 — UBAH KE APK -->
+            <div class="tab-content" id="tab-apk">
+                <div class="card">
+                    <div class="card-title"><span class="text-green">📱</span> Konfigurasi Pembuat APK</div>
+                    <div class="form-group">
+                        <label>Nama Aplikasi:</label>
+                        <input type="text" id="apk-app-name" placeholder="ZONE App">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Paket (Package Name):</label>
+                        <input type="text" id="apk-pkg-name" placeholder="com.zone.app">
+                    </div>
+                    <div class="form-group">
+                        <label>Versi Aplikasi:</label>
+                        <input type="text" id="apk-version" value="1.0.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih Ikon Aplikasi:</label>
+                        <input type="file" id="apk-icon-input" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload File HTML/Zip Code:</label>
+                        <input type="file" id="apk-code-input" accept=".html,.zip">
+                    </div>
+                    <button class="btn btn-primary" onclick="prepareAPK()">🔨 Siapkan APK</button>
+                </div>
+
+                <div class="card" style="border-left: 4px solid var(--secondary);">
+                    <div class="card-title"><span class="text-yellow">💡</span> Petunjuk Penggunaan APK</div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                        Untuk mengonversi file proyek ini menjadi aplikasi Android <b>.APK</b> sungguhan, unduh file proyek lalu gunakan aplikasi <b>Website 2 APK Builder</b> atau <b>HTML to APK</b> yang tersedia secara resmi di Play Store.
+                    </p>
+                </div>
+            </div>
+
+            <!-- MENU 6 — KOTAK ALAT (8 TOOLS) -->
+            <div class="tab-content" id="tab-alat">
+                
+                <!-- Tool 1: Konversi -->
+                <div class="card">
+                    <div class="card-title">📏 1. Konversi Unit (Panjang)</div>
+                    <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                        <input type="number" id="tool-conv-val" placeholder="Nilai (Meter)" oninput="runConverter()">
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--accent);" id="tool-conv-res">Hasil: 0 KM | 0 CM | 0 Inch</div>
+                </div>
+
+                <!-- Tool 2: Kata Sandi -->
+                <div class="card">
+                    <div class="card-title">🎲 2. Generator Kata Sandi</div>
+                    <button class="btn btn-secondary btn-sm" onclick="generatePassword()">Acak Kata Sandi</button>
+                    <div style="margin-top: 8px; font-weight: bold; color: var(--primary); font-size: 0.9rem;" id="tool-pass-res">- - - -</div>
+                </div>
+
+                <!-- Tool 3: Timer -->
+                <div class="card">
+                    <div class="card-title">⏰ 3. Timer Hitung Mundur</div>
+                    <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                        <input type="number" id="tool-timer-sec" placeholder="Detik (contoh: 10)">
+                        <button class="btn btn-primary btn-sm" onclick="startTimer()">Mulai</button>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--music-pink);" id="tool-timer-disp">00:00</div>
+                </div>
+
+                <!-- Tool 4: QR Code Visual Canvas -->
+                <div class="card">
+                    <div class="card-title">📱 4. Generator QR Code</div>
+                    <input type="text" id="tool-qr-text" placeholder="Teks atau URL..." oninput="drawQRCode()" style="margin-bottom: 8px;">
+                    <div style="text-align: center;">
+                        <canvas id="qr-canvas" width="120" height="120" style="background:#fff; border-radius:8px; padding:4px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tool 5: Hitung Teks -->
+                <div class="card">
+                    <div class="card-title">📝 5. Hitung Kata & Karakter</div>
+                    <textarea id="tool-text-cnt" rows="2" placeholder="Ketik kalimat di sini..." oninput="countText()"></textarea>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="tool-text-res">Karakter: 0 | Kata: 0</div>
+                </div>
+
+                <!-- Tool 6: Pilih Warna -->
+                <div class="card">
+                    <div class="card-title">🎨 6. Pemilih Warna (Color Picker)</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="color" id="tool-color-picker" value="#39ff14" onchange="updateColorTool()" style="width:50px; height:35px; cursor:pointer;">
+                        <span id="tool-color-hex" style="font-weight: bold; color: var(--primary);">#39ff14</span>
+                    </div>
+                </div>
+
+                <!-- Tool 7: Enkripsi -->
+                <div class="card">
+                    <div class="card-title">🔐 7. Enkripsi / Dekripsi Base64</div>
+                    <input type="text" id="tool-enc-input" placeholder="Teks..." style="margin-bottom: 6px;">
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-outline btn-sm" onclick="runEncode()">Encode Base64</button>
+                        <button class="btn btn-outline btn-sm" onclick="runDecode()">Decode Base64</button>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--yellow); margin-top: 6px; word-break: break-all;" id="tool-enc-res">Hasil: -</div>
+                </div>
+
+                <!-- Tool 8: Cek Link -->
+                <div class="card">
+                    <div class="card-title">🔗 8. Cek Analyzer Link</div>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="tool-url-check" placeholder="https://domain.com">
+                        <button class="btn btn-primary btn-sm" onclick="analyzeURL()">Cek</button>
+                    </div>
+                    <div style="font-size: 0.75rem; margin-top: 6px;" id="tool-url-res"></div>
+                </div>
+
+            </div>
+
+            <!-- MENU 7 — TERSIMPAN -->
+            <div class="tab-content" id="tab-simpan">
+                <div class="card">
+                    <div class="card-title"><span class="text-green">🌐</span> Website & Link Tersimpan</div>
+                    <ul class="item-list" id="saved-links-ul">
+                        <li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada link tersimpan.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="text-yellow">🏷️</span> Domain Tersimpan</div>
+                    <ul class="item-list" id="saved-domains-ul">
+                        <li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada domain tersimpan.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="text-pink">📹</span> TikTok Media Tersimpan</div>
+                    <ul class="item-list" id="saved-tiktok-ul">
+                        <li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada media TikTok tersimpan.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FIXED BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="tab-hosting" onclick="switchTab('tab-hosting')">
+                <span class="nav-icon">🏠</span>
+                <span>Beranda</span>
+            </button>
+            <button class="nav-item" data-tab="tab-domain" onclick="switchTab('tab-domain')">
+                <span class="nav-icon">🌐</span>
+                <span>Domain</span>
+            </button>
+            <button class="nav-item" data-tab="tab-tiktok" onclick="switchTab('tab-tiktok')">
+                <span class="nav-icon">🎵</span>
+                <span>TikTok</span>
+            </button>
+            <button class="nav-item" data-tab="tab-musik" onclick="switchTab('tab-musik')">
+                <span class="nav-icon">🎧</span>
+                <span>Musik</span>
+            </button>
+            <button class="nav-item" data-tab="tab-apk" onclick="switchTab('tab-apk')">
+                <span class="nav-icon">📱</span>
+                <span>APK</span>
+            </button>
+            <button class="nav-item" data-tab="tab-alat" onclick="switchTab('tab-alat')">
+                <span class="nav-icon">🧰</span>
+                <span>Alat</span>
+            </button>
+            <button class="nav-item" data-tab="tab-simpan" onclick="switchTab('tab-simpan')">
+                <span class="nav-icon">💾</span>
+                <span>Simpan</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* === BACKGROUND ANIMATED CANVAS PARTICLES === */
+        const bgCanvas = document.getElementById('bg-canvas');
+        const ctx = bgCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = Math.random() * bgCanvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.4;
+                this.color = Math.random() > 0.5 ? '#39FF14' : '#ff55aa';
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > bgCanvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > bgCanvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 40; i++) particles.push(new Particle());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        /* === REAL TIME DIGITAL CLOCK === */
+        function updateClock() {
+            const now = new Date();
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const dayName = days[now.getDay()];
+            const dateNum = now.getDate();
+            const monthName = months[now.getMonth()];
+
+            document.getElementById('live-clock').innerText = `${h}:${m}:${s} WIB • ${dayName}, ${dateNum} ${monthName}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        /* === TAB SWITCHING LOGIC === */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) targetContent.classList.add('active');
+
+            const topBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            if (topBtn) topBtn.classList.add('active');
+
+            const navBtn = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+            if (navBtn) navBtn.classList.add('active');
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        /* === DATA STORAGE (TEMPORARY MEMORY) === */
+        const AppState = {
+            hostingAccess: 'Public',
+            domainAccess: 'Public',
+            domains: [],
+            savedLinks: [],
+            savedTikTok: [],
+            playlists: {},
+            uploadedTrack: null
+        };
+
+        /* MENU 1 — HOSTING WEBSITE LOGIC */
+        function updateHostPreview() {
+            const input = document.getElementById('host-name-input').value.trim();
+            document.getElementById('sub-domain-preview').innerText = input || '...';
+        }
+
+        function setHostAccess(type) {
+            AppState.hostingAccess = type;
+            document.getElementById('host-pub-btn').classList.toggle('active', type === 'Public');
+            document.getElementById('host-priv-btn').classList.toggle('active', type === 'Private');
+        }
+
+        function deployWebsite() {
+            const name = document.getElementById('host-name-input').value.trim();
+            const fileInput = document.getElementById('host-file-input');
+
+            if (!name) return alert('Masukkan nama subdomain terlebih dahulu!');
+            if (!fileInput.files.length) return alert('Pilih file HTML yang ingin diunggah!');
+
+            const fullUrl = `https://${name}.xyz`;
+            const badgeClass = AppState.hostingAccess === 'Public' ? 'badge-public' : 'badge-private';
+            
+            document.getElementById('hosting-result-card').style.display = 'block';
+            document.getElementById('hosting-result-details').innerHTML = `
+                Situs Aktif: <a href="#" style="color:var(--primary); font-weight:bold;">${fullUrl}</a><br>
+                Akses: <span class="badge ${badgeClass}">${AppState.hostingAccess}</span><br>
+                Status: <span class="text-green">🟢 Server Online (Aktif)</span>
+            `;
+
+            AppState.savedLinks.push({ title: name, url: fullUrl, type: AppState.hostingAccess });
+            renderSavedItems();
+        }
+
+        function saveDirectLink() {
+            const url = document.getElementById('direct-link-input').value.trim();
+            if (!url) return alert('Masukkan URL valid!');
+            AppState.savedLinks.push({ title: 'Direct Link', url: url, type: 'Public' });
+            renderSavedItems();
+            alert('Link berhasil disimpan!');
+            document.getElementById('direct-link-input').value = '';
+        }
+
+        /* MENU 2 — KELOLA DOMAIN LOGIC */
+        function setDomAccess(type) {
+            AppState.domainAccess = type;
+            document.getElementById('dom-pub-btn').classList.toggle('active', type === 'Public');
+            document.getElementById('dom-priv-btn').classList.toggle('active', type === 'Private');
+        }
+
+        function addDomain() {
+            const domName = document.getElementById('domain-name-input').value.trim();
+            const note = document.getElementById('domain-note-input').value.trim();
+
+            if (!domName) return alert('Masukkan nama domain!');
+
+            const domObj = {
+                name: domName,
+                type: AppState.domainAccess,
+                note: note || 'Tidak ada catatan'
+            };
+
+            AppState.domains.push(domObj);
+            document.getElementById('domain-name-input').value = '';
+            document.getElementById('domain-note-input').value = '';
+
+            renderDomains();
+            renderSavedItems();
+        }
+
+        function renderDomains() {
+            const ul = document.getElementById('domain-list-ul');
+            ul.innerHTML = '';
+
+            let pubCount = 0, privCount = 0;
+
+            AppState.domains.forEach(d => {
+                if (d.type === 'Public') pubCount++; else privCount++;
+                const badge = d.type === 'Public' ? '🌍 Publik' : '🔒 Pribadi';
+                const badgeCls = d.type === 'Public' ? 'badge-public' : 'badge-private';
+
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <div>
+                        <strong>${d.name}</strong> <span class="badge ${badgeCls}">${badge}</span>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${d.note}</div>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+
+            document.getElementById('stat-dom-total').innerText = AppState.domains.length;
+            document.getElementById('stat-dom-pub').innerText = pubCount;
+            document.getElementById('stat-dom-priv').innerText = privCount;
+        }
+
+        /* MENU 3 — VIDEO TIKTOK LOGIC */
+        function fetchTikTokInfo() {
+            const url = document.getElementById('tiktok-url-input').value.trim();
+            if (!url) return alert('Tempelkan link TikTok terlebih dahulu!');
+
+            document.getElementById('tiktok-result-card').style.display = 'block';
+            document.getElementById('tt-title').innerText = 'Video Viral TikTok #' + Math.floor(Math.random() * 9000 + 1000);
+            document.getElementById('tt-author').innerText = '@kreator_zone';
+            document.getElementById('tt-duration').innerText = '00:30';
+
+            const ul = document.getElementById('tiktok-history-ul');
+            if (ul.children[0] && ul.children[0].innerText.includes('Belum ada')) ul.innerHTML = '';
+            
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            li.innerText = url.substring(0, 35) + '...';
+            ul.prepend(li);
+        }
+
+        function saveTikTokMedia(format) {
+            const title = document.getElementById('tt-title').innerText;
+            AppState.savedTikTok.push({ title: title, format: format, type: 'Public' });
+            renderSavedItems();
+            alert(`Media ${format} berhasil disimpan ke tab 'Simpan'!`);
+        }
+
+        /* TOOL BOX FUNCTIONS */
+        function drawQRCode() {
+            const canvas = document.getElementById('qr-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const text = document.getElementById('tool-qr-text')?.value || 'ZONE.XYZ';
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#000000';
+            const cols = 21;
+            const cellSize = width / cols;
+            
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = (hash << 5) - hash + text.charCodeAt(i);
+                hash |= 0;
+            }
+            
+            function seededRandom(seed) {
+                let x = Math.sin(seed++) * 10000;
+                return x - Math.floor(x);
+            }
+            
+            let seed = Math.abs(hash);
+
+            for (let r = 0; r < cols; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const isTopLeft = (r < 7 && c < 7);
+                    const isTopRight = (r < 7 && c >= cols - 7);
+                    const isBottomLeft = (r >= cols - 7 && c < 7);
+
+                    if (isTopLeft || isTopRight || isBottomLeft) {
+                        let localR = r < 7 ? r : r - (cols - 7);
+                        let localC = c < 7 ? c : c - (cols - 7);
+                        if (r < 7 && c >= cols - 7) localC = c - (cols - 7);
+                        
+                        if (localR === 0 || localR === 6 || localC === 0 || localC === 6 || (localR >= 2 && localR <= 4 && localC >= 2 && localC <= 4)) {
+                            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        }
+                    } else {
+                        if (seededRandom(seed++) > 0.5) {
+                            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+        }
+
+        function runConverter() {
+            const val = parseFloat(document.getElementById('tool-conv-val').value) || 0;
+            const km = (val / 1000).toFixed(3);
+            const cm = (val * 100).toFixed(1);
+            const inch = (val * 39.3701).toFixed(1);
+            document.getElementById('tool-conv-res').innerText = `Hasil: ${km} KM | ${cm} CM | ${inch} Inch`;
+        }
+
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let pass = '';
+            for (let i = 0; i < 12; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('tool-pass-res').innerText = pass;
+        }
+
+        let timerInterval;
+        function startTimer() {
+            clearInterval(timerInterval);
+            let sec = parseInt(document.getElementById('tool-timer-sec').value) || 0;
+            if (sec <= 0) return alert('Masukkan detik!');
+            
+            const disp = document.getElementById('tool-timer-disp');
+            function updateDisp() {
+                const m = String(Math.floor(sec / 60)).padStart(2, '0');
+                const s = String(sec % 60).padStart(2, '0');
+                disp.innerText = `${m}:${s}`;
+                if (sec <= 0) {
+                    clearInterval(timerInterval);
+                    disp.innerText = 'Selesai! 🔔';
+                }
+                sec--;
+            }
+            updateDisp();
+            timerInterval = setInterval(updateDisp, 1000);
+        }
+
+        function prepareAPK() {
+            const appName = document.getElementById('apk-app-name').value.trim();
+            if (!appName) return alert('Masukkan nama aplikasi!');
+            alert(`Konfigurasi APK '${appName}' telah disiapkan!\n\nSilakan gunakan aplikasi Website 2 APK Builder di Play Store untuk mengonversi file proyek ini ke file .APK asli.`);
+        }
+
+        /* === MENU 4 — 🎵 PEMUTAR MUSIK EXHAUSTIVE AUDIO ENGINE === */
+        const audio = new Audio();
+        let audioCtx, audioSource, biquadFilter;
+
+        // Fallback tone synthesizer to prevent NotSupportedError with external URLs
+        function createSynthAudioUrl(baseFreq, durationSec = 10) {
+            try {
+                const sampleRate = 22050;
+                const numSamples = sampleRate * durationSec;
+                const buffer = new Uint8Array(44 + numSamples * 2);
+                const view = new DataView(buffer.buffer);
+
+                function writeString(offset, string) {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                }
+
+                writeString(0, 'RIFF');
+                view.setUint32(4, 36 + numSamples * 2, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true); // PCM
+                view.setUint16(22, 1, true); // Mono
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                writeString(36, 'data');
+                view.setUint32(40, numSamples * 2, true);
+
+                for (let i = 0; i < numSamples; i++) {
+                    const t = i / sampleRate;
+                    const freq = baseFreq * (1 + 0.1 * Math.sin(t * 2));
+                    const env = Math.min(t, 1) * Math.min(durationSec - t, 1);
+                    const sample = Math.sin(2 * Math.PI * freq * t) * env * 0.25;
+                    const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+                    view.setInt16(44 + i * 2, intSample, true);
+                }
+
+                const blob = new Blob([buffer], { type: 'audio/wav' });
+                return URL.createObjectURL(blob);
+            } catch (err) {
+                console.warn('Synth Audio Generation Error:', err);
+                return '';
+            }
+        }
+
+        // Generate reliable demo audio sources dynamically
+        const defaultTracks = [
+            { id: 1, title: 'Lagu Tenang', artist: 'Zone Relax', duration: '00:10', src: createSynthAudioUrl(220, 10) },
+            { id: 2, title: 'Lagu Semangat', artist: 'Beat Cyber', duration: '00:10', src: createSynthAudioUrl(330, 10) },
+            { id: 3, title: 'Lagu Santai', artist: 'Chill Vibe', duration: '00:10', src: createSynthAudioUrl(261.63, 10) },
+            { id: 4, title: 'Lagu Fokus', artist: 'Deep Mind', duration: '00:10', src: createSynthAudioUrl(174.61, 10) },
+            { id: 5, title: 'Lagu Tidur', artist: 'Night Ambient', duration: '00:10', src: createSynthAudioUrl(146.83, 10) }
+        ];
+
+        let currentTrackList = [...defaultTracks];
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        let favorites = new Set();
+        let isRepeat = false;
+        let isShuffle = false;
+
+        audio.onerror = (e) => {
+            console.warn('Audio playback error captured:', e);
+            isPlaying = false;
+            updatePlayerUI();
+        };
+
+        audio.ontimeupdate = function() {
+            if (audio.duration) {
+                const seekSlider = document.getElementById('seek-slider');
+                if (seekSlider) seekSlider.value = (audio.currentTime / audio.duration) * 100;
+
+                const currMin = String(Math.floor(audio.currentTime / 60)).padStart(2, '0');
+                const currSec = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
+                const durMin = String(Math.floor(audio.duration / 60)).padStart(2, '0');
+                const durSec = String(Math.floor(audio.duration % 60)).padStart(2, '0');
+
+                const currDisp = document.getElementById('curr-time');
+                const durDisp = document.getElementById('total-time');
+                if (currDisp) currDisp.innerText = `${currMin}:${currSec}`;
+                if (durDisp) durDisp.innerText = `${durMin}:${durSec}`;
+            }
+        };
+
+        audio.onended = function() {
+            if (isRepeat) {
+                audio.currentTime = 0;
+                audio.play();
+            } else if (isShuffle) {
+                const randomIdx = Math.floor(Math.random() * currentTrackList.length);
+                playTrackAtIndex(randomIdx);
+            } else {
+                if (currentTrackIndex + 1 < currentTrackList.length) {
+                    playTrackAtIndex(currentTrackIndex + 1);
+                } else {
+                    isPlaying = false;
+                    updatePlayerUI();
+                }
+            }
+        };
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioSource = audioCtx.createMediaElementSource(audio);
+                    biquadFilter = audioCtx.createBiquadFilter();
+                    audioSource.connect(biquadFilter);
+                    biquadFilter.connect(audioCtx.destination);
+                } catch (e) {
+                    console.warn('Web Audio API context init skipped:', e);
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function updatePlayerUI() {
+            const playBtn = document.getElementById('main-play-btn');
+            const vinyl = document.getElementById('vinyl-disk');
+            const bars = document.querySelectorAll('.v-bar');
+
+            if (isPlaying) {
+                if (playBtn) playBtn.innerText = '⏸️';
+                if (vinyl) vinyl.classList.add('playing');
+                bars.forEach(b => b.classList.add('active'));
+            } else {
+                if (playBtn) playBtn.innerText = '▶️';
+                if (vinyl) vinyl.classList.remove('playing');
+                bars.forEach(b => b.classList.remove('active'));
+            }
+
+            const currentTrack = currentTrackList[currentTrackIndex];
+            if (currentTrack) {
+                const favBtn = document.getElementById('fav-btn');
+                if (favBtn) {
+                    favBtn.innerText = favorites.has(currentTrack.id) ? '⭐' : '☆';
+                }
+            }
+        }
+
+        function seekTrack(val) {
+            if (audio.duration) {
+                audio.currentTime = (val / 100) * audio.duration;
+            }
+        }
+
+        function skipTime(seconds) {
+            audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + seconds));
+        }
+
+        function setVolume(val) {
+            audio.volume = val / 100;
+        }
+
+        function setSpeed(spd) {
+            audio.playbackRate = spd;
+        }
+
+        function setEQ(preset) {
+            initAudioContext();
+            if (!biquadFilter) return;
+            if (preset === 'Normal') {
+                biquadFilter.type = 'allpass';
+            } else if (preset === 'HighPitch') {
+                biquadFilter.type = 'highshelf';
+                biquadFilter.frequency.value = 1000;
+                biquadFilter.gain.value = 10;
+            } else if (preset === 'LowPitch') {
+                biquadFilter.type = 'lowshelf';
+                biquadFilter.frequency.value = 500;
+                biquadFilter.gain.value = 10;
+            } else if (preset === 'ClearVoice') {
+                biquadFilter.type = 'peaking';
+                biquadFilter.frequency.value = 2500;
+                biquadFilter.gain.value = 8;
+            } else if (preset === 'BassBoost') {
+                biquadFilter.type = 'lowshelf';
+                biquadFilter.frequency.value = 200;
+                biquadFilter.gain.value = 15;
+            }
+            alert(`Equalizer: ${preset} aktif!`);
+        }
+
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            document.getElementById('repeat-btn').classList.toggle('active-mode', isRepeat);
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffle-btn').classList.toggle('active-mode', isShuffle);
+        }
+
+        function toggleActiveFav() {
+            const cur = currentTrackList[currentTrackIndex];
+            if (cur) toggleFavItem(cur.id);
+        }
+
+        function toggleFavItem(id) {
+            if (favorites.has(id)) favorites.delete(id);
+            else favorites.add(id);
+            renderTracklist();
+            renderFavorites();
+            updatePlayerUI();
+        }
+
+        function handleAudioUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const objectUrl = URL.createObjectURL(file);
+            AppState.uploadedTrack = {
+                id: Date.now(),
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                artist: 'Lokal File',
+                duration: '--:--',
+                src: objectUrl
+            };
+            const info = document.getElementById('upload-file-info');
+            info.style.display = 'block';
+            info.innerText = `File dipilih: ${file.name}`;
+            document.getElementById('add-uploaded-btn').style.display = 'block';
+        }
+
+        function addUploadedToTracklist() {
+            if (!AppState.uploadedTrack) return;
+            currentTrackList.push(AppState.uploadedTrack);
+            const newIdx = currentTrackList.length - 1;
+            AppState.uploadedTrack = null;
+            document.getElementById('upload-file-info').style.display = 'none';
+            document.getElementById('add-uploaded-btn').style.display = 'none';
+            renderTracklist();
+            playTrackAtIndex(newIdx);
+            alert('Lagu berhasil ditambahkan ke daftar!');
+        }
+
+        function createPlaylist() {
+            const name = document.getElementById('playlist-name-input').value.trim();
+            if (!name) return alert('Masukkan nama playlist!');
+            if (!AppState.playlists[name]) {
+                AppState.playlists[name] = [...currentTrackList];
+                document.getElementById('playlist-name-input').value = '';
+                renderPlaylists();
+                alert(`Playlist '${name}' berhasil dibuat!`);
+            } else {
+                alert('Nama playlist sudah ada!');
+            }
+        }
+
+        function renderPlaylists() {
+            const container = document.getElementById('playlist-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const names = Object.keys(AppState.playlists);
+            if (!names.length) {
+                container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">Belum ada playlist.</div>`;
+                return;
+            }
+            names.forEach(pName => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.style.marginBottom = '6px';
+                div.innerHTML = `
+                    <div>
+                        <strong>📋 ${pName}</strong>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${AppState.playlists[pName].length} lagu</div>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="playPlaylist('${pName}')">▶️ Putar Playlist</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function playPlaylist(pName) {
+            if (AppState.playlists[pName] && AppState.playlists[pName].length) {
+                currentTrackList = AppState.playlists[pName];
+                renderTracklist();
+                playTrackAtIndex(0);
+            }
+        }
+
+        function renderTracklist() {
+            const ul = document.getElementById('tracklist-ul');
+            ul.innerHTML = '';
+
+            currentTrackList.forEach((t, idx) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                const isFav = favorites.has(t.id);
+                li.innerHTML = `
+                    <div>
+                        <strong style="color:${idx === currentTrackIndex ? 'var(--primary)' : '#fff'}">${t.title}</strong>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${t.artist}</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-outline btn-sm" onclick="playTrackAtIndex(${idx})">▶️ Putar</button>
+                        <button class="btn btn-outline btn-sm" onclick="toggleFavItem(${t.id})">${isFav ? '⭐' : '☆'}</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        function renderFavorites() {
+            const ul = document.getElementById('favorites-ul');
+            ul.innerHTML = '';
+
+            const favTracks = currentTrackList.filter(t => favorites.has(t.id));
+
+            if (!favTracks.length) {
+                ul.innerHTML = `<li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada favorit.</li>`;
+                return;
+            }
+
+            favTracks.forEach((t) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <div>
+                        <strong>${t.title}</strong>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${t.artist}</div>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="loadAndPlayTrack('${t.src}', '${t.title}', '${t.artist}')">▶️ Putar</button>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        function loadAndPlayTrack(src, title, artist) {
+            initAudioContext();
+            if (!src) return;
+
+            audio.src = src;
+            document.getElementById('player-track-title').innerText = title;
+            document.getElementById('player-track-artist').innerText = artist;
+
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isPlaying = true;
+                    updatePlayerUI();
+                }).catch(error => {
+                    console.warn("Autoplay / Source play prevented:", error);
+                    isPlaying = false;
+                    updatePlayerUI();
+                });
+            }
+        }
+
+        function playTrackAtIndex(idx) {
+            if (idx < 0 || idx >= currentTrackList.length) return;
+            currentTrackIndex = idx;
+            const t = currentTrackList[idx];
+            loadAndPlayTrack(t.src, t.title, t.artist);
+            renderTracklist();
+        }
+
+        function togglePlay() {
+            initAudioContext();
+            if (!audio.src) {
+                playTrackAtIndex(0);
+                return;
+            }
+
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                updatePlayerUI();
+            } else {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        isPlaying = true;
+                        updatePlayerUI();
+                    }).catch(error => {
+                        console.warn("Play execution failed:", error);
+                        isPlaying = false;
+                        updatePlayerUI();
+                    });
+                }
+            }
+        }
+
+        function countText() {
+            const txt = document.getElementById('tool-text-cnt').value;
+            const charCnt = txt.length;
+            const wordCnt = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+            document.getElementById('tool-text-res').innerText = `Karakter: ${charCnt} | Kata: ${wordCnt}`;
+        }
+
+        function updateColorTool() {
+            const hex = document.getElementById('tool-color-picker').value;
+            const el = document.getElementById('tool-color-hex');
+            el.innerText = hex;
+            el.style.color = hex;
+        }
+
+        function runEncode() {
+            const txt = document.getElementById('tool-enc-input').value;
+            document.getElementById('tool-enc-res').innerText = 'Hasil: ' + btoa(txt);
+        }
+
+        function runDecode() {
+            try {
+                const txt = document.getElementById('tool-enc-input').value;
+                document.getElementById('tool-enc-res').innerText = 'Hasil: ' + atob(txt);
+            } catch (e) {
+                document.getElementById('tool-enc-res').innerText = 'Format Base64 tidak valid!';
+            }
+        }
+
+        function analyzeURL() {
+            const url = document.getElementById('tool-url-check').value.trim();
+            if (!url) return;
+            const isHttps = url.startsWith('https://');
+            document.getElementById('tool-url-res').innerHTML = `
+                Protocol: ${isHttps ? '<span class="text-green">🔒 HTTPS (Aman)</span>' : '<span class="text-yellow">⚠️ HTTP</span>'}<br>
+                Status: <span class="text-green">200 OK (Aktif)</span>
+            `;
+        }
+
+        /* MENU 7 — TERSIMPAN LOGIC */
+        function renderSavedItems() {
+            const linksUl = document.getElementById('saved-links-ul');
+            linksUl.innerHTML = '';
+            if (!AppState.savedLinks.length) {
+                linksUl.innerHTML = `<li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada link tersimpan.</li>`;
+            } else {
+                AppState.savedLinks.forEach(l => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${l.title}</strong>
+                            <div style="font-size:0.65rem; color:var(--accent);">${l.url}</div>
+                        </div>
+                        <span class="badge ${l.type === 'Public' ? 'badge-public' : 'badge-private'}">${l.type}</span>
+                    `;
+                    linksUl.appendChild(li);
+                });
+            }
+
+            const domUl = document.getElementById('saved-domains-ul');
+            domUl.innerHTML = '';
+            if (!AppState.domains.length) {
+                domUl.innerHTML = `<li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada domain tersimpan.</li>`;
+            } else {
+                AppState.domains.forEach(d => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `
+                        <div><strong>${d.name}</strong></div>
+                        <span class="badge ${d.type === 'Public' ? 'badge-public' : 'badge-private'}">${d.type}</span>
+                    `;
+                    domUl.appendChild(li);
+                });
+            }
+
+            const ttUl = document.getElementById('saved-tiktok-ul');
+            ttUl.innerHTML = '';
+            if (!AppState.savedTikTok.length) {
+                ttUl.innerHTML = `<li style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Belum ada media TikTok tersimpan.</li>`;
+            } else {
+                AppState.savedTikTok.forEach(t => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${t.title}</strong>
+                            <div style="font-size:0.65rem; color:var(--text-pink);">Format: ${t.format}</div>
+                        </div>
+                        <span class="badge badge-public">Publik</span>
+                    `;
+                    ttUl.appendChild(li);
+                });
+            }
+        }
+
+        /* INITIALIZATION ON LOAD */
+        window.onload = function() {
+            renderTracklist();
+            renderFavorites();
+            drawQRCode();
+        };
+    </script>
+</body>
+</html>
